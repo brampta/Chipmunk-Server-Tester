@@ -1,4 +1,4 @@
-<?php require("settings.php"); ?>
+<?php require("include/init.php"); ?>
 
 <html>
 <head>
@@ -16,7 +16,7 @@ var alarm_after_how_many_bad_connections = <?php echo $alarm_after_how_many_bad_
         <div class="dashcontainer">
 
 
-            <h1 class="dashtitle">Chipmunk Server Tester</h1>
+            <h1 class="dashtitle">ChimpMonk Server Tester</h1>
 
 
             <div class="dashbuttons">

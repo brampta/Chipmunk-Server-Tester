@@ -1,5 +1,5 @@
 <?php
-require("settings.php");
+require("include/init.php");
 
 
 header('Content-Type: text/xml');
@@ -49,4 +49,3 @@ if($countemz > $max_items_in_processlist && $max_items_in_processlist != 0)
 }
 echo '</response>';
 
-?>

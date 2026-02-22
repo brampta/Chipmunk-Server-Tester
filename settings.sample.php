@@ -3,15 +3,30 @@
 $serverID=1; //if you have many servers change this number to give each server a different number (from 0 to 9)
 
 
-//database connection:
+//monitoring database connection:
+//should be able to read all the processlist from all database
+//but not need to have write permissions on the database
 $test_DB=1; //0 database is not tested, 1 database is tested. make sure you set this to 1 if you want the tester to test the database too!
 $db_host='localhost';
-$db_username='babaus';
-$db_password='23S53fd/2c3r4';
+$db_username='chimpmonk_monitor';
+$db_password='asdfasfasfaf';
 $max_items_in_processlist=40; //if you use the version that tests the DB, you will be warned (but the alarm wont ring) if there is more than max_items_in_processlist queries in your database, set to 0 to disable this
 $alarm_after_how_many_bad_connections=20; //how many times must the test fail before the alarm starts
 
+//Chimpmonk memory
+$memory_db_host='localhost';
+$memory_db_username='chimpmonk_memory';
+$memory_db_password='asdfasdfsadfs';
+$memory_db_name='chimpmonk_memory';
 
 
 
-?>
+define('MAIL_SENDING_METHOD','custom');//options are php, sendgrid or custom
+$email_from='no-reply@intercode.info';
+$email_fromname='Intercode system mail';
+
+//for sendgrid, define your API key here:
+$sendgrid_api_key='xxxxxxxxxxx';
+
+//for custom mailer, define the path to your custom mailer script here. the script must have a function send_mail($to, $toname, $from, $fromname, $subject, $message_html, $message_text) that sends an email with the given parameters. you can use include/mail.php as an example.
+define('CUSTOM_MAILER_PATH','/var/www/html/mailer/mailer/mail.php');

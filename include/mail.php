@@ -2,10 +2,22 @@
 
 
 function send_mail($to, $toname, $from, $fromname, $subject, $message_html, $message_text){
-    if(MAIL_SENDING_METHOD=='sendgrid'){
+    if(MAIL_SENDING_METHOD=='php'){
+        $headers = "From: $fromname <$from>\r\n";
+        $headers .= "Reply-To: $from\r\n";
+        $headers .= "MIME-Version: 1.0\r\n";
+        if($message_html){
+            $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+            $message=$message_html;
+        }else{
+            $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+            $message=$message_text;
+        }
+        mail($to, $subject, $message, $headers);
+    }else if(MAIL_SENDING_METHOD=='sendgrid'){
         global $sendgrid_api_key, $message;
 
-        require_once (dirname(dirname(__FILE__)) . '/sendgrid-php/sendgrid-php.php');
+        require_once(BP . '/include/sendgrid-php/sendgrid-php.php');
         $email = new \SendGrid\Mail\Mail();
 
         $email->addTo($to,$toname);
