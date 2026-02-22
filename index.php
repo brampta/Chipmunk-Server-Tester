@@ -35,6 +35,11 @@ var alarm_after_how_many_bad_connections = <?php echo $alarm_after_how_many_bad_
                 <div id="problogs"></div>
             </div>
 
+            <div class="dashlogs">
+                <h4 class="dashtitle dashsubtitle">congestion events: <button onclick="clearCongestionEvents()" class="congestion-clear-btn">clear</button></h4>
+                <div id="congestionevents"></div>
+            </div>
+
 
             <div class="interfooter"><a href="http://intercode.ca/">intercode.ca</a></div>
 

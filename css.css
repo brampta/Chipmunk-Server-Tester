@@ -81,3 +81,136 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
+
+/* Congestion Events */
+.congestion-clear-btn {
+    float: right;
+    font-size: 12px;
+    cursor: pointer;
+    background: #1e0909;
+    color: #7a7a7a;
+    border: 1px solid #351e0a;
+    border-radius: 4px;
+    padding: 2px 8px;
+}
+.congestion-clear-btn:hover {
+    background: #2a1a0a;
+    color: #9f9f9f;
+}
+.congestion-event {
+    border-bottom: 1px solid #2c1d00;
+}
+.congestion-event:last-child {
+    border-bottom: none;
+}
+.congestion-event-header {
+    padding: 10px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #9f9f9f;
+    background-color: #1e1e1e;
+    transition: background-color 0.15s;
+}
+.congestion-event-header:hover {
+    background-color: #2a1a0a;
+}
+.congestion-event-time {
+    color: #7a7a7a;
+    font-family: monospace;
+}
+.congestion-event-count {
+    color: #c44;
+    font-weight: bold;
+}
+.congestion-event-snapshots {
+    color: #7a7a7a;
+    font-size: 12px;
+}
+.congestion-csv-btn {
+    float: right;
+    font-size: 11px;
+    cursor: pointer;
+    background: #1e0909;
+    color: #7a7a7a;
+    border: 1px solid #351e0a;
+    border-radius: 4px;
+    padding: 2px 8px;
+    margin-top: -2px;
+}
+.congestion-csv-btn:hover {
+    background: #2a1a0a;
+    color: #9f9f9f;
+}
+.congestion-snapshots-container {
+    background-color: #0d0d0d;
+    padding: 4px 0;
+}
+.congestion-snapshot {
+    border-bottom: 1px solid #1a1a1a;
+}
+.congestion-snapshot:last-child {
+    border-bottom: none;
+}
+.congestion-snapshot-header {
+    padding: 6px 20px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #7a7a7a;
+    transition: background-color 0.15s;
+}
+.congestion-snapshot-header:hover {
+    background-color: #1a1206;
+}
+.congestion-snapshot-count {
+    color: #c44;
+}
+.congestion-event-detail {
+    padding: 8px;
+    background-color: #0a0a0a;
+}
+.congestion-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: monospace;
+    color: #7a7a7a;
+}
+.congestion-table thead th {
+    background-color: #1e0909;
+    color: #4d4b2a;
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 2px solid #442d00;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.congestion-table tbody td {
+    padding: 4px 8px;
+    border-bottom: 1px solid #1a1a1a;
+    vertical-align: top;
+    max-width: 300px;
+    word-break: break-all;
+}
+.congestion-table tbody tr:hover {
+    background-color: #1a1206;
+}
+.congestion-info-cell {
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.congestion-info-cell:hover {
+    white-space: normal;
+    word-break: break-all;
+}
+.congestion-ongoing {
+    color: #c44;
+    font-size: 11px;
+    font-style: italic;
+}
+.congestion-none {
+    padding: 10px;
+    color: #7a7a7a;
+}

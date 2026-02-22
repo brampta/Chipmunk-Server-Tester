@@ -131,6 +131,16 @@ function loadXMLDoc3(url)
 }
 
 var countbadsinarow = 0;
+
+// Congestion event tracking
+var wasCongested = false;
+var congestionPollCount = 0;
+var currentEventIndex = -1;
+var congestionEvents = [];
+var STORAGE_KEY = 'chimpmonk_events';
+var MAX_EVENTS = 50;
+var SNAPSHOT_SCHEDULE = [0, 6, 12, 24, 60, 120, 240, 360];
+var SNAPSHOT_RECURRING = 360;
 function processReqChange3() 
 {
 	if (req3.readyState == 4)
@@ -149,7 +159,43 @@ function processReqChange3()
 				if(max_items_in_processlist!=0 && howmanyinprocesslist>max_items_in_processlist)
 				{
 					//good but accumulation in the DB
-					
+
+					// Congestion event capture
+					if (!wasCongested) {
+						// New congestion episode
+						wasCongested = true;
+						congestionPollCount = 0;
+						var plData = parseProcessList(response);
+						var snap = createSnapshot(howmanyinprocesslist, plData);
+						var eventObj = {
+							startTime: snap.timestamp,
+							endTime: null,
+							peakCount: parseInt(howmanyinprocesslist),
+							snapshots: [snap]
+						};
+						congestionEvents.push(eventObj);
+						if (congestionEvents.length > MAX_EVENTS) {
+							congestionEvents = congestionEvents.slice(congestionEvents.length - MAX_EVENTS);
+						}
+						currentEventIndex = congestionEvents.length - 1;
+						saveEventsToStorage();
+						renderCongestionEvents();
+					} else {
+						// Ongoing congestion - check if snapshot is due
+						congestionPollCount++;
+						var cnt = parseInt(howmanyinprocesslist);
+						if (cnt > congestionEvents[currentEventIndex].peakCount) {
+							congestionEvents[currentEventIndex].peakCount = cnt;
+						}
+						if (shouldTakeSnapshot(congestionPollCount)) {
+							var plData = parseProcessList(response);
+							var snap = createSnapshot(howmanyinprocesslist, plData);
+							congestionEvents[currentEventIndex].snapshots.push(snap);
+							saveEventsToStorage();
+							renderCongestionEvents();
+						}
+					}
+
 					var gab1=setTimeout("makesound('sound_serveur');",speakspeed);
 					var gab1=setTimeout("makesound('sound_"+server_number+"');",speakspeed*2);
 					var gab1=setTimeout("makesound('sound_database');",speakspeed*2.7);
@@ -185,6 +231,21 @@ function processReqChange3()
 					
 					
 
+				}
+				else
+				{
+					// Count is below threshold
+					if (wasCongested) {
+						// Congestion just ended - capture final resolution snapshot
+						var snap = createSnapshot(howmanyinprocesslist, []);
+						congestionEvents[currentEventIndex].snapshots.push(snap);
+						congestionEvents[currentEventIndex].endTime = snap.timestamp;
+						saveEventsToStorage();
+						renderCongestionEvents();
+						wasCongested = false;
+						congestionPollCount = 0;
+						currentEventIndex = -1;
+					}
 				}
 			}
 			else if(result == "DB error")
@@ -241,5 +302,236 @@ function processReqChange3()
 }
 
 
+// --- Congestion event functions ---
 
+function shouldTakeSnapshot(pollCount) {
+	for (var i = 0; i < SNAPSHOT_SCHEDULE.length; i++) {
+		if (pollCount === SNAPSHOT_SCHEDULE[i]) return true;
+	}
+	if (pollCount > SNAPSHOT_SCHEDULE[SNAPSHOT_SCHEDULE.length - 1]) {
+		return (pollCount - SNAPSHOT_SCHEDULE[SNAPSHOT_SCHEDULE.length - 1]) % SNAPSHOT_RECURRING === 0;
+	}
+	return false;
+}
 
+function getXmlText(parentNode, tagName) {
+	var nodes = parentNode.getElementsByTagName(tagName);
+	if (nodes.length > 0 && nodes[0].firstChild) {
+		return nodes[0].firstChild.data;
+	}
+	return '';
+}
+
+function parseProcessList(xmlResponse) {
+	var data = [];
+	var processNodes = xmlResponse.getElementsByTagName("process");
+	for (var i = 0; i < processNodes.length; i++) {
+		var proc = processNodes[i];
+		data.push({
+			id:      getXmlText(proc, "pid"),
+			user:    getXmlText(proc, "user"),
+			host:    getXmlText(proc, "host"),
+			db:      getXmlText(proc, "db"),
+			command: getXmlText(proc, "command"),
+			time:    getXmlText(proc, "time"),
+			state:   getXmlText(proc, "state"),
+			info:    getXmlText(proc, "info")
+		});
+	}
+	return data;
+}
+
+function createSnapshot(connectionCount, processlistData) {
+	return {
+		timestamp: new Date().toISOString(),
+		connectionCount: parseInt(connectionCount),
+		processlist: processlistData
+	};
+}
+
+function loadEventsFromStorage() {
+	try {
+		var stored = localStorage.getItem(STORAGE_KEY);
+		if (stored) {
+			congestionEvents = JSON.parse(stored);
+			// Close any event left open from a previous session
+			for (var i = 0; i < congestionEvents.length; i++) {
+				if (!congestionEvents[i].endTime && congestionEvents[i].snapshots.length > 0) {
+					congestionEvents[i].endTime = congestionEvents[i].snapshots[congestionEvents[i].snapshots.length - 1].timestamp;
+				}
+			}
+		}
+	} catch(e) {
+		congestionEvents = [];
+	}
+}
+
+function saveEventsToStorage() {
+	try {
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(congestionEvents));
+	} catch(e) {
+		if (e.name === 'QuotaExceededError' || e.code === 22) {
+			congestionEvents = congestionEvents.slice(Math.floor(congestionEvents.length / 2));
+			try { localStorage.setItem(STORAGE_KEY, JSON.stringify(congestionEvents)); } catch(e2) {}
+		}
+	}
+}
+
+function pad2(n) {
+	return n < 10 ? '0' + n : '' + n;
+}
+
+function formatTime(isoStr) {
+	var dt = new Date(isoStr);
+	return dt.getFullYear() + '-' + pad2(dt.getMonth()+1) + '-' + pad2(dt.getDate()) + ' ' + pad2(dt.getHours()) + ':' + pad2(dt.getMinutes()) + ':' + pad2(dt.getSeconds());
+}
+
+function escapeHtml(str) {
+	if (!str) return '';
+	return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function renderCongestionEvents() {
+	var container = document.getElementById('congestionevents');
+	if (!container) return;
+
+	if (congestionEvents.length === 0) {
+		container.innerHTML = '<p class="congestion-none">No congestion events recorded.</p>';
+		return;
+	}
+
+	var html = '';
+	for (var i = congestionEvents.length - 1; i >= 0; i--) {
+		var evt = congestionEvents[i];
+		var timeLabel = formatTime(evt.startTime);
+		if (evt.endTime) {
+			timeLabel += ' &rarr; ' + formatTime(evt.endTime);
+		} else {
+			timeLabel += ' <span class="congestion-ongoing">ongoing</span>';
+		}
+
+		html += '<div class="congestion-event">';
+		html += '<div class="congestion-event-header" onclick="toggleEvent(' + i + ')">';
+		html += '<span class="congestion-event-time">' + timeLabel + '</span>';
+		html += ' &mdash; <span class="congestion-event-count">peak: ' + evt.peakCount + '</span>';
+		html += ' <span class="congestion-event-snapshots">(' + evt.snapshots.length + ' snapshot' + (evt.snapshots.length !== 1 ? 's' : '') + ')</span>';
+		html += ' <button class="congestion-csv-btn" onclick="event.stopPropagation(); downloadCSV(' + i + ')">CSV</button>';
+		html += '</div>';
+		html += '<div class="congestion-snapshots-container" id="event_' + i + '" style="display:none;">';
+
+		for (var s = 0; s < evt.snapshots.length; s++) {
+			var snap = evt.snapshots[s];
+			html += '<div class="congestion-snapshot">';
+			html += '<div class="congestion-snapshot-header" onclick="event.stopPropagation(); toggleSnapshot(' + i + ',' + s + ')">';
+			html += formatTime(snap.timestamp) + ' &mdash; <span class="congestion-snapshot-count">' + snap.connectionCount + ' connections</span>';
+			if (snap.processlist.length > 0) {
+				html += ' (' + snap.processlist.length + ' processes)';
+			}
+			html += '</div>';
+			html += '<div class="congestion-event-detail" id="snap_' + i + '_' + s + '" style="display:none;">';
+
+			if (snap.processlist.length > 0) {
+				html += '<table class="congestion-table">';
+				html += '<thead><tr><th>ID</th><th>User</th><th>Host</th><th>DB</th><th>Cmd</th><th>Time</th><th>State</th><th>Info</th></tr></thead>';
+				html += '<tbody>';
+				for (var j = 0; j < snap.processlist.length; j++) {
+					var p = snap.processlist[j];
+					html += '<tr>';
+					html += '<td>' + escapeHtml(p.id) + '</td>';
+					html += '<td>' + escapeHtml(p.user) + '</td>';
+					html += '<td>' + escapeHtml(p.host) + '</td>';
+					html += '<td>' + escapeHtml(p.db) + '</td>';
+					html += '<td>' + escapeHtml(p.command) + '</td>';
+					html += '<td>' + escapeHtml(p.time) + '</td>';
+					html += '<td>' + escapeHtml(p.state) + '</td>';
+					html += '<td class="congestion-info-cell">' + escapeHtml(p.info) + '</td>';
+					html += '</tr>';
+				}
+				html += '</tbody></table>';
+			} else {
+				html += '<p class="congestion-none">Resolution snapshot (count dropped below threshold)</p>';
+			}
+
+			html += '</div></div>';
+		}
+
+		html += '</div></div>';
+	}
+
+	container.innerHTML = html;
+}
+
+function toggleEvent(index) {
+	var el = document.getElementById('event_' + index);
+	if (el) el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+}
+
+function toggleSnapshot(eventIndex, snapIndex) {
+	var el = document.getElementById('snap_' + eventIndex + '_' + snapIndex);
+	if (el) el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+}
+
+function csvEscape(val) {
+	if (val === null || val === undefined) return '""';
+	var str = '' + val;
+	if (str.indexOf(',') !== -1 || str.indexOf('"') !== -1 || str.indexOf('\n') !== -1 || str.indexOf('\r') !== -1) {
+		return '"' + str.replace(/"/g, '""') + '"';
+	}
+	return str;
+}
+
+function downloadCSV(eventIndex) {
+	var evt = congestionEvents[eventIndex];
+	if (!evt) return;
+
+	var csvRows = ['Snapshot,Timestamp,ID,User,Host,DB,Command,Time,State,Info'];
+
+	for (var s = 0; s < evt.snapshots.length; s++) {
+		var snap = evt.snapshots[s];
+		if (snap.processlist.length > 0) {
+			for (var j = 0; j < snap.processlist.length; j++) {
+				var p = snap.processlist[j];
+				csvRows.push(
+					csvEscape(s + 1) + ',' +
+					csvEscape(snap.timestamp) + ',' +
+					csvEscape(p.id) + ',' +
+					csvEscape(p.user) + ',' +
+					csvEscape(p.host) + ',' +
+					csvEscape(p.db) + ',' +
+					csvEscape(p.command) + ',' +
+					csvEscape(p.time) + ',' +
+					csvEscape(p.state) + ',' +
+					csvEscape(p.info)
+				);
+			}
+		} else {
+			csvRows.push(csvEscape(s + 1) + ',' + csvEscape(snap.timestamp) + ',' + csvEscape(snap.connectionCount) + ',,,,,,,resolution');
+		}
+	}
+
+	var blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+	var url = URL.createObjectURL(blob);
+	var dt = new Date(evt.startTime);
+	var filename = 'congestion_' + dt.getFullYear() + '-' + pad2(dt.getMonth()+1) + '-' + pad2(dt.getDate()) + '_' + pad2(dt.getHours()) + '-' + pad2(dt.getMinutes()) + '.csv';
+
+	var link = document.createElement('a');
+	link.setAttribute('href', url);
+	link.setAttribute('download', filename);
+	link.style.display = 'none';
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+	URL.revokeObjectURL(url);
+}
+
+function clearCongestionEvents() {
+	if (confirm('Clear all stored congestion events?')) {
+		congestionEvents = [];
+		saveEventsToStorage();
+		renderCongestionEvents();
+	}
+}
+
+// Initialize congestion events from localStorage
+loadEventsFromStorage();
+renderCongestionEvents();
