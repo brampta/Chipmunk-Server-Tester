@@ -2,7 +2,7 @@
 
 A lightweight server monitoring tool that continuously tests your web server and database, alerting you with audio cues in real time. A gentle chipmunk chirp means everything is healthy; a loud alarm means something is down.
 
-**Current version:** 1.02
+**Current version:** 1.1
 
 ## Features
 
@@ -73,6 +73,12 @@ chipmunk-dev/
 - **No build tools** - pure HTML/CSS/JS served by Apache
 
 ## Changelog
+
+### 1.1
+- Congestion event tracking dashboard - captures process list snapshots at scheduled intervals when queries pile up
+- Congestion events persist in localStorage across page refreshes
+- CSV export for congestion event data
+- Auto-trims stored events when storage quota is exceeded
 
 ### 1.02
 - Reuse audio elements instead of creating new ones each beep (memory optimisation)
