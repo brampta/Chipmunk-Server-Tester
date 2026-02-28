@@ -1,4 +1,6 @@
 <?php
-require("settings.php");
 
-define('BP',dirname(__FILE__));
+
+define('BPC',dirname(dirname(__FILE__)));
+
+require(BPC."/settings.php");

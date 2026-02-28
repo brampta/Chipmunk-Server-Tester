@@ -4,9 +4,9 @@
 var retest_time = 5000; //the server is tested every retest_time milliseconds (every retest_time/1000 seconds)
 var speakspeed = 500; //taling speed (for error codes), the lower the number the faster the talking
 
-var test_url = "xmltest.xml"; //version that tests only web server, not DB
+var test_url = url_base + "xmltest.xml"; //version that tests only web server, not DB
 if(test_DB==1)
-{test_url = "xmltest.php";} //version that tests both web server and DB!
+{test_url = url_base + "xmltest.php";} //version that tests both web server and DB!
 
 var volumes = new Array();
 volumes['good'] = null;
@@ -52,7 +52,7 @@ function makesound(elsound)
 	}
 	//console.log('sound_volume',sound_volume);
 
-	let prefix_to_add = 'sounds/';
+	let prefix_to_add = url_base + 'sounds/';
 	let suffix_to_add = '.mp3';
 	let sound_file_name = prefix_to_add + sound_name + suffix_to_add;
 	//console.log('playing file',sound_file_name);
@@ -137,7 +137,7 @@ var wasCongested = false;
 var congestionPollCount = 0;
 var currentEventIndex = -1;
 var congestionEvents = [];
-var STORAGE_KEY = 'chimpmonk_events';
+var STORAGE_KEY = 'chipmunk_events';
 var MAX_EVENTS = 50;
 var SNAPSHOT_SCHEDULE = [0, 6, 12, 24, 60, 120, 240, 360];
 var SNAPSHOT_RECURRING = 360;

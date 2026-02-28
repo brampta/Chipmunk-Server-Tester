@@ -1,5 +1,4 @@
 <?php require("include/init.php"); ?>
-
 <html>
 <head>
 <script type="text/javascript">
@@ -7,16 +6,17 @@ var server_number = <?php echo $serverID; ?>;
 var test_DB = <?php echo $test_DB; ?>;
 var max_items_in_processlist = <?php echo $max_items_in_processlist; ?>;
 var alarm_after_how_many_bad_connections = <?php echo $alarm_after_how_many_bad_connections; ?>;
+var url_base = '<?php echo URL_BASE; ?>';
 </script>
 
 
-<link rel="stylesheet" href="css.css">
+<link rel="stylesheet" href="<?php echo URL_BASE; ?>css.css">
 </head>
 <body>
         <div class="dashcontainer">
 
 
-            <h1 class="dashtitle">ChimpMonk Server Tester</h1>
+            <h1 class="dashtitle">Chipmunk Server Tester</h1>
 
 
             <div class="dashbuttons">
@@ -51,7 +51,7 @@ var alarm_after_how_many_bad_connections = <?php echo $alarm_after_how_many_bad_
         <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
         <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
 
-        <script type="text/javascript" src="scripts.js"></script>
+        <script type="text/javascript" src="<?php echo URL_BASE; ?>scripts.js"></script>
 
     </body>
 	</html>
