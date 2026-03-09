@@ -44,8 +44,6 @@ Edit `settings.php` to customise behaviour:
 | `$max_items_in_processlist` | Alert when the process list exceeds this count |
 | `$alarm_after_how_many_bad_connections` | Consecutive failures before sounding the alarm |
 | `URL_BASE` | URL path to the tester |
-| `MAIL_SENDING_METHOD` | `'custom'`, `'php'`, or `'sendgrid'` |
-| `CUSTOM_MAILER_PATH` | Path to a custom mailer script |
 
 By default (without editing `settings.php`) the tester will only monitor your web server, which requires no configuration.
 
@@ -90,4 +88,4 @@ chipmunk-dev/
 
 ## License
 
-Developed by [intercode.ca](https://intercode.ca)
+Developed by [intercode.info](https://intercode.info)

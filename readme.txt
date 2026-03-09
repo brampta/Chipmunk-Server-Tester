@@ -1,3 +1,5 @@
+//old readme. to remove
+
 Chipmunk Server Tester version 1.02 from intercode.ca
 ===========================================================
 

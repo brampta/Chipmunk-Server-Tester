@@ -16,14 +16,3 @@ $alarm_after_how_many_bad_connections=20; //how many times must the test fail be
 
 define('URL_BASE','/'); //the base URL of the tester, change it if you put the tester in a different location
 
-
-
-define('MAIL_SENDING_METHOD','custom');//options are php, sendgrid or custom
-$email_from='no-reply@intercode.info';
-$email_fromname='Intercode system mail';
-
-//for sendgrid, define your API key here:
-$sendgrid_api_key='xxxxxxxxxxx';
-
-//for custom mailer, define the path to your custom mailer script here. the script must have a function send_mail($to, $toname, $from, $fromname, $subject, $message_html, $message_text) that sends an email with the given parameters. you can use include/mail.php as an example.
-define('CUSTOM_MAILER_PATH','/var/www/html/mailer/mailer/mail.php');
