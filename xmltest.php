@@ -9,21 +9,25 @@ echo '<?xml version="1.0"?>';
 echo '<response>';
 
 $elrezu='unknown error';
-@$con=mysqli_connect($db_host,$db_username,$db_password);
-$sql="SHOW FULL PROCESSLIST";
 $countemz=0;
 $rows=array();
-if (@$result=mysqli_query($con,$sql))
-{
-	$elrezu='ok';
-	while($row = mysqli_fetch_array($result))
+try {
+	$con=mysqli_connect($db_host,$db_username,$db_password);
+	$sql="SHOW FULL PROCESSLIST";
+	if ($result=mysqli_query($con,$sql))
 	{
-		$countemz++;
-		$rows[]=$row;
+		$elrezu='ok';
+		while($row = mysqli_fetch_array($result))
+		{
+			$countemz++;
+			$rows[]=$row;
+		}
 	}
+	else
+	{$elrezu='DB error';}
+} catch (Exception $e) {
+	$elrezu='DB error';
 }
-else
-{$elrezu='DB error';}
 
 
 echo '<howmanyinprocesslist>'.$countemz.'</howmanyinprocesslist>';

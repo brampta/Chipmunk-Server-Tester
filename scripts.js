@@ -72,27 +72,42 @@ function makesound(elsound)
 }
 
 
-var t=setTimeout("test()",retest_time);
+// Web Worker timer - immune to background tab throttling
+var timerWorker = new Worker(url_base + 'timer-worker.js');
+timerWorker.onmessage = function(e) {
+	if (e.data.action === 'created') return;
+	if (e.data.name === 'test') test();
+	if (e.data.name === 'safety') timedout();
+};
 
+function scheduleTest(delay) {
+	timerWorker.postMessage({ action: 'clear' });
+	timerWorker.postMessage({ action: 'set', name: 'test', delay: delay });
+}
 
-var safety;
+function scheduleSafety() {
+	timerWorker.postMessage({ action: 'set', name: 'safety', delay: safety_time });
+}
+
+scheduleTest(retest_time);
+
 var safety_time = 120000;
 function timedout()
 {
-	makesound('sound_serveur');                
+	makesound('sound_serveur');
 	var gab1=setTimeout("makesound('sound_1');",speakspeed);
 	var gab2=setTimeout("makesound('sound_timeout');",speakspeed*2);
-	clearTimeout(t);
-	t=setTimeout("test()",retest_time);
+	scheduleTest(retest_time);
 }
 
 
 function test()
 {
 	loadpage();
-	clearTimeout(safety);
-	safety=setTimeout("timedout()",safety_time);
+	timerWorker.postMessage({ action: 'clear' });
+	scheduleSafety();
 }
+
 
 
 
@@ -141,15 +156,22 @@ var STORAGE_KEY = 'chipmunk_events';
 var MAX_EVENTS = 50;
 var SNAPSHOT_SCHEDULE = [0, 6, 12, 24, 60, 120, 240, 360];
 var SNAPSHOT_RECURRING = 360;
-function processReqChange3() 
+function processReqChange3()
 {
 	if (req3.readyState == 4)
 	{
 		if (req3.status == 200)
 		{
+			try {
 			response = req3.responseXML.documentElement;
             var result = response.getElementsByTagName("result")[0].firstChild.data;
             var howmanyinprocesslist = response.getElementsByTagName("howmanyinprocesslist")[0].firstChild.data;
+            } catch(e) {
+                // XML parsing failed (e.g. server returned non-XML error page)
+                // Fall through to schedule next test
+                scheduleTest(retest_time);
+                return;
+            }
             if(result == "ok")
 			{
 				//all is good! happy chipmunk!!
@@ -297,7 +319,7 @@ function processReqChange3()
 	
 		
 		
-		t=setTimeout("test()",retest_time);
+		scheduleTest(retest_time);
 	}
 }
 
